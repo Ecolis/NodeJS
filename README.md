@@ -21,12 +21,28 @@
 
 3.  Инициализация проекта.
    
-   Выполните команду для создания package.json:
+      Выполните команду для создания package.json:
 
-   `npm init -y`
+      `npm init -y`
 
 4.  Установка зависимостей.
-   `npm install express body-parser`
-   `npm install swagger-ui-express swagger-jsdoc`
+   
+      `npm install express body-parser`
+   
+      `npm install swagger-ui-express swagger-jsdoc`
+5. Запуск серверов.
+   - Сервер для просмотра катологов товаров:
+     
+      `node server.js`
+      Сервер будет доступен по адресу:
+      http://localhost:3000
+
+   - Сервер администратора:
+     
+      `node admin-server.js`
+     Сервер будет доступен по адресу:
+     http://localhost:8080
+     
+
 
 
