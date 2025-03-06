@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог товаров</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .product-entry {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        .product-card {
+            border: 2px solid #2ecc71;
+            background: #e8f5e9;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            display: inline-block;
+            width: 220px;
+            vertical-align: top;
+            transition: transform 0.3s ease-in-out;
+        }
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+        .product-card h3 {
+            margin: 0 0 8px;
+            color: #27ae60;
+        }
+        .product-card p {
+            margin: 0 0 8px;
+            color: #2d3436;
+        }
+        .category-filter {
+            margin-bottom: 24px;
+        }
+        .category-filter label {
+            font-weight: bold;
+        }
+        #products-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Каталог товаров</h1>
+
+  
+    <div class="category-filter">
+        <label for="category-select">Выберите категорию:</label>
+        <select id="category-select">
+            <option value="">Все категории</option>
+        </select>
+    </div>
+
+   
+    <div id="products-container"></div>
+
+    <script>
+       
+        async function loadProducts() {
+            const response = await fetch('/products.json');
+            const products = await response.json();
+            const categorySelect = document.getElementById('category-select');
+            const productsContainer = document.getElementById('products-container');
+
+           
+            const categories = new Set();
+            products.forEach(product => {
+                product.categories.forEach(category => categories.add(category));
+            });
+
+          
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+
+            
+            function displayProducts(filterCategory = '') {
+                productsContainer.innerHTML = ''; 
+
+                products.forEach(product => {
+                   
+                    if (!filterCategory || product.categories.includes(filterCategory)) {
+                        const card = document.createElement('div');
+                        card.className = 'product-card';
+
+                        const name = document.createElement('h3');
+                        name.textContent = product.name;
+
+                        const price = document.createElement('p');
+                        price.textContent = `Цена: ${product.price} руб.`;
+
+                        const description = document.createElement('p');
+                        description.textContent = product.description;
+
+                        
+                        const categories = document.createElement('p');
+                        categories.textContent = `Категории: ${product.categories.join(', ')}`;
+
+                        card.appendChild(name);
+                        card.appendChild(price);
+                        card.appendChild(description);
+                        card.appendChild(categories);
+
+                        productsContainer.appendChild(card);
+                    }
+                });
+            }
+
+            
+            displayProducts();
+
+            
+            categorySelect.addEventListener('change', (event) => {
+                const selectedCategory = event.target.value;
+                displayProducts(selectedCategory);
+            });
+        }
+
+        
+        loadProducts();
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "iPhone 14 Pro",
+    "price": 999,
+    "description": "Флагманский смартфон Apple с камерой 48 МП и чипом A16 Bionic.",
+    "categories": [
+      "Смартфоны",
+      "Электроника"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Samsung Galaxy S23 Ultra",
+    "price": 1199,
+    "description": "Мощный смартфон с S Pen, 200 МП камерой и Snapdragon 8 Gen 2.",
+    "categories": [
+      "Смартфоны",
+      "Электроника"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "MacBook Air M2",
+    "price": 1299,
+    "description": "Тонкий и мощный ноутбук Apple с процессором M2 и Retina-дисплеем.",
+    "categories": [
+      "Ноутбуки",
+      "Электроника"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Sony WH-1000XM5",
+    "price": 399,
+    "description": "Беспроводные наушники с шумоподавлением и поддержкой Hi-Res Audio.",
+    "categories": [
+      "Аудиотехника",
+      "Наушники"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "PlayStation 5",
+    "price": 499,
+    "description": "Игровая консоль нового поколения с поддержкой 4K-гейминга и SSD.",
+    "categories": [
+      "Игровые консоли",
+      "Электроника"
+    ]
+  }
+]

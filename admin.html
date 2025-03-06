@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .product-entry {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        #products-list {
+            list-style: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Панель администратора</h1>
+
+   
+    <h2>Добавить товары</h2>
+    <div id="product-forms">
+        <div class="product-entry">
+            <input type="text" class="name" placeholder="Название" required>
+            <input type="number" class="price" placeholder="Цена" required>
+            <input type="text" class="description" placeholder="Описание" required>
+            <input type="text" class="categories" placeholder="Категории (через запятую)">
+        </div>
+    </div>
+    <button onclick="addProductForm()">Добавить еще товар</button>
+    <button onclick="submitProducts()">Отправить товары</button>
+
+    
+    <h2>Редактировать товар</h2>
+    <input type="number" id="edit-id" placeholder="Введите ID товара" required>
+    <button onclick="editProduct()">Редактировать</button>
+
+  
+    <h2>Удалить товар</h2>
+    <input type="number" id="delete-id" placeholder="Введите ID товара" required>
+    <button onclick="deleteProduct()">Удалить</button>
+
+    
+    <h2>Список товаров</h2>
+    <ul id="products-list"></ul>
+
+    <script>
+        function addProductForm() {
+            const container = document.getElementById("product-forms");
+            const div = document.createElement("div");
+            div.classList.add("product-entry");
+            div.innerHTML = `
+                <input type="text" class="name" placeholder="Название" required>
+                <input type="number" class="price" placeholder="Цена" required>
+                <input type="text" class="description" placeholder="Описание" required>
+                <input type="text" class="categories" placeholder="Категории (через запятую)">
+            `;
+            container.appendChild(div);
+        }
+
+        async function submitProducts() {
+            const entries = document.querySelectorAll(".product-entry");
+            const products = [];
+
+            entries.forEach(entry => {
+                const name = entry.querySelector(".name").value;
+                const price = parseFloat(entry.querySelector(".price").value);
+                const description = entry.querySelector(".description").value;
+                const categories = entry.querySelector(".categories").value.split(',').map(s => s.trim());
+
+                if (name && !isNaN(price) && description) {
+                    products.push({ name, price, description, categories });
+                }
+            });
+
+            if (products.length === 0) {
+                alert("Добавьте хотя бы один товар!");
+                return;
+            }
+
+            await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(products)
+            });
+
+            loadProducts();
+        }
+
+        async function loadProducts() {
+            const response = await fetch('/api/products');
+            const products = await response.json();
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+
+            products.forEach(product => {
+                const li = document.createElement('li');
+                li.className = 'product-card';
+                li.innerHTML = `
+                    <strong>ID:</strong> ${product.id}<br>
+                    <strong>Название:</strong> ${product.name}<br>
+                    <strong>Цена:</strong> ${product.price} руб.<br>
+                    <strong>Описание:</strong> ${product.description}<br>
+                    <strong>Категории:</strong> ${product.categories.join(', ')}<br>
+                `;
+                productsList.appendChild(li);
+            });
+        }
+
+        async function editProduct() {
+            const productId = parseInt(document.getElementById('edit-id').value);
+            if (isNaN(productId)) {
+                alert("Введите корректный ID");
+                return;
+            }
+
+            const newName = prompt('Введите новое название:');
+            const newPrice = parseFloat(prompt('Введите новую цену:'));
+            const newDescription = prompt('Введите новое описание:');
+            const newCategories = prompt('Введите новые категории (через запятую):');
+
+            if (!newName || isNaN(newPrice) || !newDescription) return;
+
+            const updatedProduct = {
+                id: productId,
+                name: newName,
+                price: newPrice,
+                description: newDescription,
+                categories: newCategories.split(',').map(s => s.trim())
+            };
+
+            await fetch('/api/products', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedProduct)
+            });
+
+            loadProducts();
+        }
+
+        async function deleteProduct() {
+            const productId = parseInt(document.getElementById('delete-id').value);
+            if (isNaN(productId)) {
+                alert("Введите корректный ID");
+                return;
+            }
+
+            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                await fetch('/api/products', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: productId })
+                });
+
+                loadProducts();
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
