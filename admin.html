@@ -72,7 +72,7 @@
 <body>
     <h1>Панель администратора</h1>
 
-   
+    <!-- Форма для добавления нескольких товаров -->
     <h2>Добавить товары</h2>
     <div id="product-forms">
         <div class="product-entry">
@@ -85,21 +85,32 @@
     <button onclick="addProductForm()">Добавить еще товар</button>
     <button onclick="submitProducts()">Отправить товары</button>
 
-    
+    <!-- Форма для редактирования товара -->
     <h2>Редактировать товар</h2>
     <input type="number" id="edit-id" placeholder="Введите ID товара" required>
     <button onclick="editProduct()">Редактировать</button>
 
-  
+    <!-- Форма для удаления товара -->
     <h2>Удалить товар</h2>
     <input type="number" id="delete-id" placeholder="Введите ID товара" required>
     <button onclick="deleteProduct()">Удалить</button>
 
-    
+    <!-- Список товаров -->
     <h2>Список товаров</h2>
     <ul id="products-list"></ul>
 
+    <!-- Чат с поддержкой -->
+    <div class="chat-box">
+        <div class="chat-header">Чат с поддержкой</div>
+        <div class="chat-body" id="chat-body"></div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="Введите сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
     <script>
+        // Функция для добавления формы товара
         function addProductForm() {
             const container = document.getElementById("product-forms");
             const div = document.createElement("div");
@@ -113,6 +124,7 @@
             container.appendChild(div);
         }
 
+        // Функция для отправки товаров
         async function submitProducts() {
             const entries = document.querySelectorAll(".product-entry");
             const products = [];
@@ -142,6 +154,7 @@
             loadProducts();
         }
 
+        // Функция для загрузки товаров
         async function loadProducts() {
             const response = await fetch('/api/products');
             const products = await response.json();
@@ -162,6 +175,7 @@
             });
         }
 
+        // Функция для редактирования товара
         async function editProduct() {
             const productId = parseInt(document.getElementById('edit-id').value);
             if (isNaN(productId)) {
@@ -193,6 +207,7 @@
             loadProducts();
         }
 
+        // Функция для удаления товара
         async function deleteProduct() {
             const productId = parseInt(document.getElementById('delete-id').value);
             if (isNaN(productId)) {
@@ -211,6 +226,33 @@
             }
         }
 
+        // WebSocket клиент для чата
+        const ws = new WebSocket('ws://localhost:8081');
+        ws.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            const chatBody = document.getElementById('chat-body');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${message.from}: ${message.text}`;
+            chatBody.appendChild(messageElement);
+            chatBody.scrollTop = chatBody.scrollHeight; // Прокрутка вниз
+        };
+
+        // Функция для отправки сообщения
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value;
+            if (text) {
+                ws.send(JSON.stringify({ type: 'message', text: text }));
+                input.value = '';
+            }
+        }
+
+        // Регистрация пользователя (например, как администратор)
+        ws.onopen = function() {
+            ws.send(JSON.stringify({ type: 'register', role: 'admin', username: 'Администратор' }));
+        };
+
+        // Загружаем товары при загрузке страницы
         loadProducts();
     </script>
 </body>

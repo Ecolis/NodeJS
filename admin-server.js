@@ -3,25 +3,46 @@ const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const http = require('http');
+const WebSocket = require('ws');
 
 const app = express();
 const port = 8080;
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
 app.use(express.json());
 
+// Подключение WebSocket
+wss.on('connection', (ws) => {
+    console.log('Администратор подключился к WebSocket');
 
+    ws.on('message', (message) => {
+        console.log('Сообщение от клиента:', message);
+
+        // Отправляем сообщение всем подключенным клиентам (покупателям и администраторам)
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+    });
+
+    ws.on('close', () => {
+        console.log('Администратор отключился от WebSocket');
+    });
+});
+
+// API для управления товарами
 const productsFilePath = path.join(__dirname, 'products.json');
-
 
 function readProducts() {
     return fs.existsSync(productsFilePath) ? JSON.parse(fs.readFileSync(productsFilePath, 'utf8')) : [];
 }
 
-
 function writeProducts(products) {
     fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
 }
-
 
 function generateId(products) {
     const existingIds = new Set(products.map(p => p.id));
@@ -32,7 +53,7 @@ function generateId(products) {
     return newId;
 }
 
-
+// Swagger документация
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
@@ -42,53 +63,16 @@ const swaggerOptions = {
             description: 'Документация API для управления товарами'
         },
     },
-    apis: [__filename], 
+    apis: [__filename],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-/**
- * @swagger
- * /api/products:
- *   get:
- *     summary: Получить все товары
- *     responses:
- *       200:
- *         description: Список всех товаров
- */
 app.get('/api/products', (req, res) => {
     res.json(readProducts());
 });
 
-/**
- * @swagger
- * /api/products:
- *   post:
- *     summary: Добавить несколько товаров
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: object
- *               properties:
- *                 name:
- *                   type: string
- *                 price:
- *                   type: number
- *                 description:
- *                   type: string
- *                 categories:
- *                   type: array
- *                   items:
- *                     type: string
- *     responses:
- *       200:
- *         description: Товары успешно добавлены
- */
 app.post('/api/products', (req, res) => {
     let products = readProducts();
 
@@ -103,36 +87,6 @@ app.post('/api/products', (req, res) => {
     res.json({ message: 'Товары добавлены', products: newProducts });
 });
 
-/**
- * @swagger
- * /api/products:
- *   put:
- *     summary: Редактировать товар по ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               id:
- *                 type: integer
- *               name:
- *                 type: string
- *               price:
- *                 type: number
- *               description:
- *                 type: string
- *               categories:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Товар обновлен
- *       404:
- *         description: Товар не найден
- */
 app.put('/api/products', (req, res) => {
     const { id, ...updatedProduct } = req.body;
     let products = readProducts();
@@ -147,26 +101,6 @@ app.put('/api/products', (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/products:
- *   delete:
- *     summary: Удалить товар по ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               id:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Товар удален
- *       404:
- *         description: Товар не найден
- */
 app.delete('/api/products', (req, res) => {
     const { id } = req.body;
     let products = readProducts();
@@ -181,12 +115,13 @@ app.delete('/api/products', (req, res) => {
     }
 });
 
-
+// Отдаем HTML-страницу админки
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-app.listen(port, () => {
+// Запускаем сервер
+server.listen(port, () => {
     console.log(`Сервер запущен на http://localhost:${port}`);
     console.log(`Swagger UI доступен по адресу http://localhost:${port}/api-docs`);
 });

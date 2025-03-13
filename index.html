@@ -97,7 +97,7 @@
 <body>
     <h1>Каталог товаров</h1>
 
-  
+    <!-- Фильтр по категориям -->
     <div class="category-filter">
         <label for="category-select">Выберите категорию:</label>
         <select id="category-select">
@@ -105,24 +105,34 @@
         </select>
     </div>
 
-   
+    <!-- Контейнер для товаров -->
     <div id="products-container"></div>
 
+    <!-- Чат с поддержкой -->
+    <div class="chat-box">
+        <div class="chat-header">Чат с поддержкой</div>
+        <div class="chat-body" id="chat-body"></div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="Введите сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
     <script>
-       
+        // Функция для загрузки данных из JSON-файла
         async function loadProducts() {
             const response = await fetch('/products.json');
             const products = await response.json();
             const categorySelect = document.getElementById('category-select');
             const productsContainer = document.getElementById('products-container');
 
-           
+            // Собираем все уникальные категории
             const categories = new Set();
             products.forEach(product => {
                 product.categories.forEach(category => categories.add(category));
             });
 
-          
+            // Заполняем выпадающий список категориями
             categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category;
@@ -130,12 +140,11 @@
                 categorySelect.appendChild(option);
             });
 
-            
+            // Функция для отображения товаров
             function displayProducts(filterCategory = '') {
-                productsContainer.innerHTML = ''; 
+                productsContainer.innerHTML = ''; // Очищаем контейнер
 
                 products.forEach(product => {
-                   
                     if (!filterCategory || product.categories.includes(filterCategory)) {
                         const card = document.createElement('div');
                         card.className = 'product-card';
@@ -149,7 +158,6 @@
                         const description = document.createElement('p');
                         description.textContent = product.description;
 
-                        
                         const categories = document.createElement('p');
                         categories.textContent = `Категории: ${product.categories.join(', ')}`;
 
@@ -163,17 +171,42 @@
                 });
             }
 
-            
+            // Отображаем все товары при загрузке страницы
             displayProducts();
 
-            
+            // Обработчик изменения выбранной категории
             categorySelect.addEventListener('change', (event) => {
                 const selectedCategory = event.target.value;
                 displayProducts(selectedCategory);
             });
         }
 
-        
+        // WebSocket клиент для чата
+        const ws = new WebSocket('ws://localhost:8081');
+        ws.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            const chatBody = document.getElementById('chat-body');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${message.from}: ${message.text}`;
+            chatBody.appendChild(messageElement);
+            chatBody.scrollTop = chatBody.scrollHeight; // Прокрутка вниз
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value;
+            if (text) {
+                ws.send(JSON.stringify({ type: 'message', text: text }));
+                input.value = '';
+            }
+        }
+
+        // Регистрация пользователя (например, как клиент)
+        ws.onopen = function() {
+            ws.send(JSON.stringify({ type: 'register', role: 'client', username: 'Пользователь' }));
+        };
+
+        // Загружаем товары при загрузке страницы
         loadProducts();
     </script>
 </body>
