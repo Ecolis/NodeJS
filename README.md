@@ -30,7 +30,12 @@
       `npm install express body-parser`
    
       `npm install swagger-ui-express swagger-jsdoc`
-5. Запуск серверов.
+    
+      `npm install express-graphql graphql`
+
+      `npm install ws`
+    
+6. Запуск серверов.
    - Сервер для просмотра катологов товаров:
      
       `node server.js`
